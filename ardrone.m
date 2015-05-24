@@ -9,6 +9,8 @@ if exist('input','var')
         uninstall
     elseif strcmp(input,'--example')
         example
+    elseif strcmp(input,'--addlibrary')
+        enableLibrary
     else
         disp('Invalid input provided, please use --help to see options');
     end
@@ -21,6 +23,27 @@ end
 function help
 
 fprintf('usage: ardrone [--help] [--install] [--uninstall] [--example]\n');
+
+end
+
+function enableLibrary
+
+fprintf('Downloading library files...');
+url ='http://drone.austinodell.com/sim_library.zip';
+loc = urlwrite(url,'sim_library.zip');
+fprintf('done\n');
+
+fprintf('Extracting files...');
+unzip(loc,'c:/matlab/ardrone/');
+fprintf('done\n');
+
+fprintf('Adding library to Simulink...');
+set_param(gcs,'EnableLBRepository','on');
+fprintf('done\n');
+
+fprintf('Cleaning up...');
+delete(loc);
+fprintf('done\n\n');
 
 end
 
