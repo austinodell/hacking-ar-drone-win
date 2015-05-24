@@ -1,6 +1,4 @@
-function [ output ] = setup( input )
-%SETUP Summary of this function goes here
-%   Detailed explanation goes here
+function setup( input )
 
 if exist('input','var')
     if strcmp(input,'--help')
@@ -28,26 +26,69 @@ end
 
 function install
 
-fprintf('Beginning setup for AR Drone 2.0 Toolchain...\n');
+fprintf('Beginning setup for AR Drone 2.0 Toolchain...\n\n');
 
 uninstall;
 
 fprintf('Creating folder...');
 [mks,mkmess,mkmessid] = mkdir('c:/matlab','ardrone');
-fprintf('done\n');
+fprintf('done\n\n');
+
+fprintf('Downloading support package installer...');
+%url ='http://drone.austinodell.com/support_files.zip';
+%urlspec ='http://www.mathworks.com/matlabcentral/fileexchange/downloads/63772/akamai/armcortexadst.mlpkginstall';
+url ='http://www.mathworks.com/matlabcentral/fileexchange/48010?download=true';
+urlwrite(url,'armcortexadst.mlpkginstall');
+fprintf('done\n\n');
+
+fprintf('Opening support package installer...');
+open('armcortexadst.mlpkginstall');
+fprintf('done\n\n');
+
+v = version('-release');
+path = ['c:/matlab/supportpackages/r' v '/'];
+[pathstr,name,ext] = fileparts(path);
+disp(['Note: Install support package to default directory (' pathstr ').']);
+
+fprintf('Waiting for support package to install...');
+while(wait_for_support_package(pathstr) == 0)
+    pause(1);
+end
+fprintf('done\n\n');
+
+fprintf('Downloading support files...');
+%url ='https://github.com/austinodell/hacking-ar-drone-win/blob/master/support_files.zip?raw=true';
+url ='https://github.com/austinodell/hacking-ar-drone-win/archive/master.zip';
+loc = urlwrite(url,'support_files.zip');
+fprintf('done\n\n');
 
 fprintf('Extracting files to location...');
-unzip('support_files','c:/matlab/ardrone');
-fprintf('done\n');
-
-%fprintf('Copying files...');
-%[cps,cpmess,cpmessid] = copyfile('matlab_files/*','c:/matlab/ardrone');
-%fprintf('done\n');
+unzip(loc,'c:/matlab/ardrone');
+fprintf('done\n\n');
 
 fprintf('Adding to path...');
-addpath('c:/matlab/ardrone');
-fprintf('done\n');
+addpath(genpath('c:/matlab/ardrone'));
+fprintf('done\n\n');
 
+fprintf('Cleaning up...');
+delete('support_files.zip');
+delete('armcortexadst.mlpkginstall');
+fprintf('done\n\n');
+
+fprintf('You have successfully installed the AR Drone toolchain!\n');
+
+end
+
+function result = wait_for_support_package(pathstr)
+    result = 0;
+    
+    directory = dir(pathstr);
+    for i=1:size(directory,1)
+        if regexp(directory(i).name, regexptranslate('wildcard','Linaro-Toolchain-*'))
+            result = 1;
+            return
+        end
+    end
 end
 
 function uninstall
@@ -55,13 +96,17 @@ function uninstall
 previous = exist('c:/matlab/ardrone');
 
 if(previous == 7)
+    fprintf('Removing path...');
+    rmpath(genpath('c:/matlab/ardrone'));
+    fprintf('done\n');
     fprintf('Removing old installation...');
-    rmpath('c:/matlab/ardrone');
     rmdir('c:/matlab/ardrone','s');
     fprintf('done\n');
 elseif(previous ~= 0)
+    fprintf('Removing path...');
+    rmpath(genpath('c:/matlab/ardrone'));
+    fprintf('done\n');
     fprintf('Removing old failed installation...');
-    rmpath('c:/matlab/ardrone');
     delete('c:/matlab/ardrone');
     fprintf('done\n');
 end
